@@ -100,6 +100,192 @@ a { text-decoration: none; color: inherit; }
   line-height: 2;
 }
 
+/* ── 3.5. SCANNER OVERLAY (FUTURISTIC) ─────────────────── */
+.scanner-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #2d0a1a 0%, #110208 100%);
+  z-index: 9998; /* Below music control */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1s var(--ease-out);
+}
+.scanner-overlay.auth-success {
+  opacity: 0;
+  pointer-events: none;
+}
+.scanner-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+}
+
+/* Sci-Fi HUD Rings */
+.hud-rings {
+  position: absolute;
+  inset: -15px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+.hud-ring {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.hud-ring-outer {
+  width: 100%;
+  height: 100%;
+  border: 1px dashed rgba(236, 64, 122, 0.4);
+  animation: spinSlow 12s linear infinite;
+}
+.hud-ring-inner {
+  width: 85%;
+  height: 85%;
+  border: 2px dotted rgba(236, 64, 122, 0.25);
+  animation: spinSlowReverse 8s linear infinite;
+}
+@keyframes spinSlow { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes spinSlowReverse { 100% { transform: translate(-50%, -50%) rotate(-360deg); } }
+
+/* SVG Progress Ring */
+.scanner-ring-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+}
+.scanner-ring-bg {
+  fill: none;
+  stroke: rgba(236, 64, 122, 0.1);
+  stroke-width: 3;
+}
+.scanner-ring-progress {
+  fill: none;
+  stroke: var(--clr-primary);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 403;
+  stroke-dashoffset: 403; /* 2*pi*r where r=64 -> ~402.12 */
+  transition: stroke-dashoffset 0.1s linear, stroke 0.3s;
+}
+
+/* Biometric Scanner Button */
+.scanner-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(236, 64, 122, 0.05);
+  color: var(--clr-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.3s var(--ease-bounce), box-shadow 0.3s, background 0.3s;
+  box-shadow: 0 0 25px rgba(236, 64, 122, 0.15), inset 0 0 15px rgba(236, 64, 122, 0.05);
+  overflow: hidden;
+}
+.scanner-btn svg {
+  width: 38px;
+  height: 38px;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 0 8px rgba(236, 64, 122, 0.4));
+  transition: filter 0.3s;
+}
+
+/* Laser Sweep Animation */
+.scanner-laser {
+  position: absolute;
+  top: -10px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #ff4081;
+  box-shadow: 0 0 15px #ff4081, 0 0 5px #fff;
+  opacity: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Holding State (Scanning) */
+.scanner-btn.holding {
+  transform: scale(0.92);
+  box-shadow: 0 0 50px rgba(236, 64, 122, 0.6), inset 0 0 20px rgba(236, 64, 122, 0.2);
+  background: rgba(236, 64, 122, 0.15);
+}
+.scanner-btn.holding svg {
+  filter: drop-shadow(0 0 15px rgba(236, 64, 122, 0.9));
+  animation: pulseColor 1.5s infinite alternate;
+}
+.scanner-btn.holding .scanner-laser {
+  opacity: 1;
+  animation: laserSweep 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulseColor {
+  0% { color: var(--clr-primary); }
+  100% { color: #ff80ab; }
+}
+@keyframes laserSweep {
+  0% { top: 10%; }
+  100% { top: 90%; }
+}
+
+/* Failed State */
+.scanner-btn.failed {
+  animation: shakeError 0.4s;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+}
+.scanner-btn.failed svg {
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.8));
+}
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* Success State */
+.scanner-btn.success {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+  transform: scale(1.1);
+}
+.scanner-btn.success svg {
+  filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.9));
+}
+.scanner-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--clr-baby-pink);
+  letter-spacing: 1px;
+  text-align: center;
+  transition: color 0.3s;
+}
+.scanner-text.success {
+  color: #10b981;
+}
+.scanner-text.failed {
+  color: #ef4444;
+}
+.hidden-until-auth {
+  display: none !important;
+}
+
 /* ── 4. ENVELOPE SECTION ──────────────────────────────── */
 .s-envelope {
   text-align: center;
@@ -937,3 +1123,116 @@ body::after {
   background: #cba028;
   transform: translateY(-2px);
 }
+
+/* ── Scratch-Off Canvas Feature ── */
+.scratch-card-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.scratch-content {
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Make content unclickable until canvas is removed/faded */
+}
+.scratch-content.revealed {
+  pointer-events: auto; /* Clickable after scratching */
+}
+.scratch-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  cursor: pointer;
+  touch-action: none; /* Prevent scrolling when scratching */
+  transition: opacity 1s ease;
+}
+
+/* ── 21. FLOATING MUSIC CONTROL (BOTTOM COMPACT PILL) ────── */
+.music-control-btn {
+  position: fixed;
+  bottom: max(1.2rem, calc(0.8rem + var(--safe-bottom)));
+  left: 50%;
+  top: auto;
+  right: auto;
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(236, 64, 122, 0.3);
+  box-shadow: 0 6px 20px rgba(139, 30, 63, 0.22);
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: var(--clr-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: all 0.4s var(--ease-out);
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.music-control-btn.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.music-control-btn:hover, .music-control-btn:active {
+  background: rgba(255, 255, 255, 0.92);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 30, 63, 0.3);
+}
+
+.music-icon {
+  font-size: 0.95rem;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.music-control-btn.playing .music-icon {
+  animation: spinNote 3s linear infinite;
+}
+
+@keyframes spinNote {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Equalizer Bars Animation */
+.eq-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.eq-bar {
+  width: 2px;
+  background: var(--clr-primary-light);
+  border-radius: 1px;
+  height: 3px;
+  transition: height 0.3s ease;
+}
+
+.music-control-btn.playing .eq-bar:nth-child(1) { animation: eqAnim 0.8s ease-in-out infinite alternate; }
+.music-control-btn.playing .eq-bar:nth-child(2) { animation: eqAnim 0.6s ease-in-out infinite alternate 0.2s; }
+.music-control-btn.playing .eq-bar:nth-child(3) { animation: eqAnim 0.9s ease-in-out infinite alternate 0.4s; }
+
+@keyframes eqAnim {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
+.music-status-text {
+  letter-spacing: 0.5px;
+}
+

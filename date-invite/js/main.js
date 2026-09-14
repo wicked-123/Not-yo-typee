@@ -20,6 +20,90 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  /* ── 1.5. SCANNER AUTHENTICATION ──────────────────────── */
+  const scannerOverlay = document.getElementById('scanner-overlay');
+  const scannerBtn = document.getElementById('scanner-btn');
+  const scannerProgress = document.getElementById('scanner-ring-progress');
+  const scannerText = document.getElementById('scanner-text');
+  const envWrapper = document.getElementById('envelope-letter-wrapper');
+  
+  let scanTimer;
+  let isScanning = false;
+  let authSuccess = false;
+
+  function startScan(e) {
+    if (authSuccess || e.button === 2) return;
+    isScanning = true;
+    scannerBtn.classList.add('holding');
+    scannerBtn.classList.remove('failed');
+    scannerText.classList.remove('failed');
+    scannerText.textContent = "Scanning...";
+    
+    // Start progress animation
+    if(scannerProgress) {
+      scannerProgress.style.transition = "stroke-dashoffset 3s linear";
+      scannerProgress.style.strokeDashoffset = "0";
+    }
+
+    scanTimer = setTimeout(() => {
+      authSuccess = true;
+      isScanning = false;
+      scannerBtn.classList.remove('holding');
+      scannerBtn.classList.add('success');
+      scannerText.classList.add('success');
+      
+      const configName = (typeof dateConfig !== 'undefined' && dateConfig.herName) ? dateConfig.herName : 'Miss Charismatic';
+      scannerText.textContent = `Match Found: ${configName}`;
+      
+      if(scannerProgress) {
+        scannerProgress.style.stroke = "#10b981";
+      }
+
+      setTimeout(() => {
+        scannerOverlay.classList.add('auth-success');
+        if(envWrapper) envWrapper.classList.remove('hidden-until-auth');
+        
+        // Trigger background music play attempt here as well!
+        if (typeof playMusic === 'function') playMusic();
+        
+        setTimeout(() => scannerOverlay.remove(), 1000);
+      }, 1500);
+      
+    }, 3000);
+  }
+
+  function stopScan() {
+    if (authSuccess || !isScanning) return;
+    isScanning = false;
+    clearTimeout(scanTimer);
+    scannerBtn.classList.remove('holding');
+    scannerBtn.classList.add('failed');
+    scannerText.classList.add('failed');
+    scannerText.textContent = "Authentication Failed";
+    
+    // Reset progress
+    if(scannerProgress) {
+      scannerProgress.style.transition = "stroke-dashoffset 0.3s ease";
+      scannerProgress.style.strokeDashoffset = "340";
+    }
+
+    setTimeout(() => {
+      if (!isScanning && !authSuccess) {
+        scannerBtn.classList.remove('failed');
+        scannerText.classList.remove('failed');
+        scannerText.textContent = "Hold to authenticate";
+      }
+    }, 1200);
+  }
+
+  if (scannerBtn) {
+    scannerBtn.addEventListener('mousedown', startScan);
+    scannerBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startScan(e); }, { passive: false });
+    
+    window.addEventListener('mouseup', stopScan);
+    window.addEventListener('touchend', stopScan);
+  }
+
   /* ── 2. SCROLL-TRIGGERED ANIMATIONS ───────────────────── */
   const animEls = document.querySelectorAll('.anim');
   const animObserver = new IntersectionObserver((entries, obs) => {
@@ -38,7 +122,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
   animEls.forEach(el => animObserver.observe(el));
 
-  /* ── 3. ENVELOPE INTERACTION ──────────────────────────── */
+  /* ── 3. BACKGROUND MUSIC LOGIC ─────────────────────────── */
+  const bgMusic       = document.getElementById('bg-music');
+  const musicBtn      = document.getElementById('music-control-btn');
+  const musicStatus   = document.getElementById('music-status-text');
+  let isMusicPlaying  = false;
+  let musicStarted    = false;
+
+  function playMusic() {
+    if (!bgMusic) return;
+    bgMusic.play().then(() => {
+      isMusicPlaying = true;
+      musicStarted = true;
+      musicBtn.classList.add('playing', 'visible');
+      if (musicStatus) musicStatus.textContent = 'Playing ♡';
+    }).catch(err => {
+      console.log('Autoplay deferred until touch:', err);
+      musicBtn.classList.add('visible');
+      if (musicStatus) musicStatus.textContent = 'Play Music';
+    });
+  }
+
+  function pauseMusic() {
+    if (!bgMusic) return;
+    bgMusic.pause();
+    isMusicPlaying = false;
+    musicBtn.classList.remove('playing');
+    if (musicStatus) musicStatus.textContent = 'Play Music';
+  }
+
+  function toggleMusic() {
+    if (isMusicPlaying) {
+      pauseMusic();
+    } else {
+      playMusic();
+    }
+  }
+
+  if (musicBtn) {
+    musicBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMusic();
+    });
+  }
+
+  // Attempt immediate autoplay on load
+  playMusic();
+
+  // Auto-play fallback on first touch/swipe/scroll anywhere on the page
+  function enableAutoPlayOnFirstTouch() {
+    if (musicStarted) return;
+    playMusic();
+    window.removeEventListener('touchstart', enableAutoPlayOnFirstTouch);
+    window.removeEventListener('click', enableAutoPlayOnFirstTouch);
+    window.removeEventListener('scroll', enableAutoPlayOnFirstTouch);
+  }
+
+  window.addEventListener('touchstart', enableAutoPlayOnFirstTouch, { passive: true, once: true });
+  window.addEventListener('click', enableAutoPlayOnFirstTouch, { passive: true, once: true });
+  window.addEventListener('scroll', enableAutoPlayOnFirstTouch, { passive: true, once: true });
+
+  /* ── 3b. ENVELOPE INTERACTION ──────────────────────────── */
   const envelopeWrapper = document.getElementById('envelope-wrapper');
   const swipeCta        = document.getElementById('swipe-cta');
   const secLetter       = document.getElementById('sec-letter');
@@ -48,6 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (envelopeOpened) return;
     envelopeOpened = true;
     envelopeWrapper.classList.add('opened');
+    
+    // Start music on envelope open
+    playMusic();
+
     setTimeout(() => swipeCta.classList.add('hidden'), 900);
     
     // Drop the main letter card out of the envelope
@@ -334,26 +482,201 @@ document.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(drawDots);
 
   /* ── 8. REPLAY ────────────────────────────────────────── */
-  document.getElementById('btn-replay').addEventListener('click', () => {
-    // Reset envelope
-    envelopeOpened = false;
-    envelopeWrapper.classList.remove('opened');
-    swipeCta.classList.remove('hidden');
+  const btnReplay = document.getElementById('btn-replay');
+  if (btnReplay) {
+    btnReplay.addEventListener('click', () => {
+      // Reset envelope
+      envelopeOpened = false;
+      envelopeWrapper.classList.remove('opened');
+      swipeCta.classList.remove('hidden');
 
-    // Reset all animations
-    animEls.forEach(el => {
-      el.classList.remove('in-view');
-      animObserver.observe(el);
+      // Reset all animations
+      animEls.forEach(el => {
+        el.classList.remove('in-view');
+        animObserver.observe(el);
+      });
+
+      // Reset buttons / celebration
+      celebration.classList.add('hidden');
+      btnRow.classList.remove('hidden');
+      const thinkMsg = document.getElementById('think-msg');
+      if (thinkMsg) thinkMsg.classList.add('hidden');
+      document.body.style.overflow = '';
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  /* ── 9. TOUCH & CURSOR SPARKLE TRAIL ─────────────────── */
+  let lastTrailTime = 0;
+  function createHeartTrail(x, y) {
+    const now = Date.now();
+    if (now - lastTrailTime < 65) return; // limit spawn rate
+    lastTrailTime = now;
+
+    const spark = document.createElement('div');
+    const items = ['✨', '💖', '🌸', '✨', '💕', '🌷'];
+    const item = items[Math.floor(Math.random() * items.length)];
+    
+    spark.textContent = item;
+    spark.style.cssText = `
+      position: fixed;
+      left: ${x}px;
+      top: ${y}px;
+      pointer-events: none;
+      z-index: 9999;
+      font-size: ${10 + Math.random() * 12}px;
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0.9;
+      transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+    `;
+    document.body.appendChild(spark);
+
+    requestAnimationFrame(() => {
+      spark.style.transform = `translate(-50%, ${-25 - Math.random() * 25}px) scale(1.2) rotate(${(Math.random() - 0.5) * 40}deg)`;
+      spark.style.opacity = '0';
     });
 
-    // Reset buttons / celebration
-    celebration.classList.add('hidden');
-    btnRow.classList.remove('hidden');
-    thinkMsg.classList.add('hidden');
-    document.body.style.overflow = '';
+    setTimeout(() => spark.remove(), 850);
+  }
 
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.addEventListener('pointermove', (e) => {
+    createHeartTrail(e.clientX, e.clientY);
+  }, { passive: true });
+
+  /* ── 9. SCRATCH-OFF CANVAS FOR ALL CARDS ────────────────── */
+  const scratchCanvases = document.querySelectorAll('.scratch-canvas');
+  
+  scratchCanvases.forEach((canvas, index) => {
+    const sCtx = canvas.getContext('2d');
+    const contentId = `scratch-content-${index + 1}`;
+    let isDrawing = false;
+    let hasRevealed = false;
+
+    function initScratchCard() {
+      if (canvas.width !== canvas.parentElement.clientWidth && canvas.parentElement.clientWidth > 0) {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        
+        // Draw highly realistic metallic gradient
+        const grad = sCtx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        grad.addColorStop(0.0, "#f8f9fa"); // white-ish
+        grad.addColorStop(0.2, "#a1a5ab"); // dark silver
+        grad.addColorStop(0.4, "#f8f9fa"); // white-ish
+        grad.addColorStop(0.6, "#71767d"); // deeper grey
+        grad.addColorStop(0.8, "#f8f9fa"); // white-ish
+        grad.addColorStop(1.0, "#a1a5ab"); // dark silver
+        
+        sCtx.fillStyle = grad;
+        sCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add subtle glitter/noise texture
+        for(let i=0; i<3000; i++) {
+          sCtx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.1)';
+          sCtx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1.5, 1.5);
+        }
+        
+        // Draw beautiful text
+        sCtx.font = "bold 22px 'Playfair Display'";
+        sCtx.textAlign = "center";
+        sCtx.textBaseline = "middle";
+        
+        sCtx.shadowColor = "rgba(0,0,0,0.6)";
+        sCtx.shadowBlur = 6;
+        sCtx.shadowOffsetX = 0;
+        sCtx.shadowOffsetY = 2;
+        
+        sCtx.fillStyle = '#ffffff';
+        sCtx.fillText("✨ Scratch Me ✨", canvas.width / 2, canvas.height / 2);
+
+        // Reset shadow for erasing
+        sCtx.shadowBlur = 0;
+        sCtx.shadowOffsetX = 0;
+        sCtx.shadowOffsetY = 0;
+
+        // Enable eraser mode
+        sCtx.globalCompositeOperation = 'destination-out';
+      }
+    }
+
+    const scratchObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !hasRevealed) {
+          initScratchCard();
+        }
+      });
+    });
+    scratchObserver.observe(canvas);
+
+    // Also try to init on window resize just in case
+    window.addEventListener('resize', () => {
+      if (!hasRevealed && canvas.parentElement.clientWidth > 0) {
+        initScratchCard();
+      }
+    });
+
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startScratch(e) {
+      if (hasRevealed || !canvas.width) return;
+      isDrawing = true;
+      scratch(e);
+    }
+    function endScratch() {
+      if (isDrawing) {
+        isDrawing = false;
+        checkReveal();
+      }
+    }
+    function scratch(e) {
+      if (!isDrawing || hasRevealed) return;
+      if (e.cancelable) e.preventDefault(); 
+      
+      const pos = getMousePos(e);
+      sCtx.beginPath();
+      // Use shadow to create a soft brush edge like real scratching
+      sCtx.shadowBlur = 10;
+      sCtx.shadowColor = 'black';
+      sCtx.arc(pos.x, pos.y, 35, 0, Math.PI * 2);
+      sCtx.fill();
+    }
+
+    function checkReveal() {
+      if (hasRevealed || !canvas.width) return;
+      const imageData = sCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imageData.data;
+      let transparentPixels = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i + 3] === 0) transparentPixels++;
+      }
+      const percent = (transparentPixels / (pixels.length / 4)) * 100;
+      if (percent > 45) { // If 45% scratched, reveal it
+        hasRevealed = true;
+        canvas.style.opacity = '0';
+        const contentEl = document.getElementById(contentId);
+        if(contentEl) contentEl.classList.add('revealed');
+        setTimeout(() => { canvas.style.display = 'none'; }, 1000);
+      }
+    }
+
+    canvas.addEventListener('mousedown', startScratch);
+    canvas.addEventListener('touchstart', startScratch, { passive: false });
+    window.addEventListener('mousemove', (e) => {
+      if(e.target === canvas) scratch(e);
+    });
+    canvas.addEventListener('touchmove', scratch, { passive: false });
+    window.addEventListener('mouseup', endScratch);
+    window.addEventListener('touchend', endScratch);
   });
 
 });
+

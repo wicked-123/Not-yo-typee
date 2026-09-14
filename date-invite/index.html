@@ -19,10 +19,62 @@
 
 <body>
 
+  <!-- ═══ background music element ═══ -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- ═══ floating music pill ═══ -->
+  <button id="music-control-btn" class="music-control-btn" title="Toggle Music">
+    <span class="music-icon">🎵</span>
+    <div class="eq-bars">
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+      <div class="eq-bar"></div>
+    </div>
+    <span id="music-status-text" class="music-status-text">Playing ♡</span>
+  </button>
+
   <!-- ═══ global background canvas (particles) ═══ -->
   <canvas id="particles-canvas"></canvas>
 
-  <div id="envelope-letter-wrapper">
+  <!-- ═══════════════════════════════════════════════
+       SECTION 0 — SCANNER OVERLAY
+       ═══════════════════════════════════════════════ -->
+  <div class="scanner-overlay" id="scanner-overlay">
+    <div class="scanner-container">
+      
+      <!-- Sci-Fi HUD Rings -->
+      <div class="hud-rings">
+        <div class="hud-ring hud-ring-outer"></div>
+        <div class="hud-ring hud-ring-inner"></div>
+      </div>
+
+      <!-- SVG Progress Ring -->
+      <svg class="scanner-ring-svg" width="140" height="140" viewBox="0 0 140 140">
+        <circle class="scanner-ring-bg" cx="70" cy="70" r="64" />
+        <circle class="scanner-ring-progress" id="scanner-ring-progress" cx="70" cy="70" r="64" />
+      </svg>
+      
+      <button class="scanner-btn" id="scanner-btn">
+        <div class="scanner-laser" id="scanner-laser"></div>
+        <!-- High-Tech Fingerprint SVG -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M12 4a8 8 0 0 0-8 8"/>
+           <path d="M4.5 16.5A10.9 10.9 0 0 1 4 12c0-4.4 3.6-8 8-8s8 3.6 8 8a10.9 10.9 0 0 1-.5 4.5"/>
+           <path d="M8 12a4 4 0 0 1 8 0"/>
+           <path d="M9.5 16.5A6.9 6.9 0 0 1 8 12c0-2.2 1.8-4 4-4s4 1.8 4 4a6.9 6.9 0 0 1-1.5 4.5"/>
+           <path d="M12 12v6"/>
+           <path d="M9 19v2"/>
+           <path d="M15 19v2"/>
+        </svg>
+      </button>
+    </div>
+    <p class="scanner-text" id="scanner-text">Hold thumb to authenticate</p>
+  </div>
+
+  <div id="envelope-letter-wrapper" class="hidden-until-auth">
     <!-- ═══════════════════════════════════════════════
          SECTION 1 — ENVELOPE
          ═══════════════════════════════════════════════ -->
@@ -154,35 +206,44 @@
     <h2 class="plan-main-heading anim" data-anim="fade">The Plan for Our Date</h2>
 
     <div class="cards-container">
-      <!-- Card 1 -->
-      <div class="date-card anim" data-anim="scale">
-        <img src="https://pandareviewz.com/wp-content/uploads/2019/06/insidea-ambiance-verandah--1024x708.jpg" alt="Verandah Cafe" class="date-card-img" />
-        <div class="date-card-content">
-          <h3>Place to be together.</h3>
-          <p><strong>Verandah Cafe.</strong></p>
-          <p>The time we will spend will be memorable and I couldn't ask for more.</p>
-          <a href="https://www.bing.com/maps/directions?ty=0&v=2&sV=1&rtp=%7Epos.16.505313873291016_80.6636734008789__Verandah%2520Coffee%2520Roasters%2520And%2520Cafe_&cp=16.505042%7E80.664424&lvl=15.8&style=r" target="_blank" class="date-map-link">View on Maps</a>
+      <!-- Card 1 (Scratch-Off) -->
+      <div class="date-card anim scratch-card-wrapper" data-anim="scale">
+        <div class="scratch-content" id="scratch-content-1">
+          <img src="https://pandareviewz.com/wp-content/uploads/2019/06/insidea-ambiance-verandah--1024x708.jpg" alt="Verandah Cafe" class="date-card-img" />
+          <div class="date-card-content">
+            <h3>Place to be together.</h3>
+            <p><strong>Verandah Cafe.</strong></p>
+            <p>The time we will spend will be memorable and I couldn't ask for more.</p>
+            <a href="https://www.bing.com/maps/directions?ty=0&v=2&sV=1&rtp=%7Epos.16.505313873291016_80.6636734008789__Verandah%2520Coffee%2520Roasters%2520And%2520Cafe_&cp=16.505042%7E80.664424&lvl=15.8&style=r" target="_blank" class="date-map-link">View on Maps</a>
+          </div>
         </div>
+        <canvas class="scratch-canvas" id="scratch-canvas-1"></canvas>
       </div>
 
-      <!-- Card 2 -->
-      <div class="date-card anim" data-anim="scale" data-delay="150">
-        <img src="images/movie_custom.png" alt="Movie Time" class="date-card-img" />
-        <div class="date-card-content">
-          <h3>Movie time</h3>
-          <p>Your favourite thing to do on weekends. How can I forget that?</p>
-          <a href="#" class="date-map-link" style="background: var(--clr-primary);">Your decision</a>
+      <!-- Card 2 (Scratch-Off) -->
+      <div class="date-card anim scratch-card-wrapper" data-anim="scale" data-delay="150">
+        <div class="scratch-content" id="scratch-content-2">
+          <img src="images/movie_custom.png" alt="Movie Time" class="date-card-img" />
+          <div class="date-card-content">
+            <h3>Movie time</h3>
+            <p>Your favourite thing to do on weekends. How can I forget that?</p>
+            <a href="#" class="date-map-link" style="background: var(--clr-primary);">Your decision</a>
+          </div>
         </div>
+        <canvas class="scratch-canvas" id="scratch-canvas-2"></canvas>
       </div>
 
-      <!-- Card 3 -->
-      <div class="date-card anim" data-anim="scale" data-delay="300">
-        <img src="https://d3sftlgbtusmnv.cloudfront.net/blog/wp-content/uploads/2024/09/PVP-Square-Mall.jpg" alt="PVP Square Mall" class="date-card-img" />
-        <div class="date-card-content">
-          <h3>Shopping</h3>
-          <p>After all this can we roam around a mall to shop?</p>
-          <a href="https://www.bing.com/maps/search?mepi=72%7ELocal%7EEmbedded%7EEntity_Vertical_List_Card&ty=17&poicount=18&sei=0&FORM=MPSRPL&q=mall+in+vijayawada&secq=PVP+Square+mall&sece=ypid.YN7BEF010C3A1C79AB&ppois=16.513853073120117_80.62700653076172_South+India+Shopping+Mall-Vijayawada_YN915CAB873BD7E0EF%7E16.505088806152344_80.63304901123047_The+Chennai+Shopping+Mall+-+Vijayawada_YNCF236928F46A86D6%7E16.502464294433594_80.64268493652344_PVP+Square_YN7BEF010C3A1C79AB%7E&segment=Local&cp=16.502464%7E80.642685&lvl=14.5&style=r" target="_blank" class="date-map-link">View on Maps</a>
+      <!-- Card 3 (Scratch-Off) -->
+      <div class="date-card anim scratch-card-wrapper" data-anim="scale" data-delay="300">
+        <div class="scratch-content" id="scratch-content-3">
+          <img src="https://d3sftlgbtusmnv.cloudfront.net/blog/wp-content/uploads/2024/09/PVP-Square-Mall.jpg" alt="PVP Square Mall" class="date-card-img" />
+          <div class="date-card-content">
+            <h3>Shopping</h3>
+            <p>After all this can we roam around a mall to shop?</p>
+            <a href="https://www.bing.com/maps/search?mepi=72%7ELocal%7EEmbedded%7EEntity_Vertical_List_Card&ty=17&poicount=18&sei=0&FORM=MPSRPL&q=mall+in+vijayawada&secq=PVP+Square+mall&sece=ypid.YN7BEF010C3A1C79AB&ppois=16.513853073120117_80.62700653076172_South+India+Shopping+Mall-Vijayawada_YN915CAB873BD7E0EF%7E16.505088806152344_80.63304901123047_The+Chennai+Shopping+Mall+-+Vijayawada_YNCF236928F46A86D6%7E16.502464294433594_80.64268493652344_PVP+Square_YN7BEF010C3A1C79AB%7E&segment=Local&cp=16.502464%7E80.642685&lvl=14.5&style=r" target="_blank" class="date-map-link">View on Maps</a>
+          </div>
         </div>
+        <canvas class="scratch-canvas" id="scratch-canvas-3"></canvas>
       </div>
     </div>
   </section>

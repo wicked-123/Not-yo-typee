@@ -457,14 +457,14 @@ a { text-decoration: none; color: inherit; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: 5;
 }
 .floating-layer {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 0;
+  z-index: 5;
 }
 .letter-card {
   position: relative;
@@ -968,7 +968,7 @@ a { text-decoration: none; color: inherit; }
 #particles-canvas {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 9997; /* Overlay on top of letter and envelope */
   pointer-events: none;
   opacity: 0.4;
 }

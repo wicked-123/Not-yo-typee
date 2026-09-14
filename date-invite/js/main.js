@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.style.cssText = `
       position: absolute;
       pointer-events: none;
-      z-index: 0;
+      z-index: 5;
       left: ${5 + Math.random() * 90}%;
       top: ${spawnY}px;
     `;
@@ -453,13 +453,15 @@ document.addEventListener('DOMContentLoaded', () => {
   resizeBg();
   window.addEventListener('resize', resizeBg);
 
-  const dots = Array.from({ length: 45 }, () => ({
+  const emojis = ['🌸', '💖', '✨', '🌷', '💕', '🌹'];
+  const dots = Array.from({ length: 35 }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    r: 0.8 + Math.random() * 1.8,
-    vx: (Math.random() - 0.5) * 0.35,
-    vy: (Math.random() - 0.5) * 0.35,
-    alpha: 0.15 + Math.random() * 0.2,
+    emoji: emojis[Math.floor(Math.random() * emojis.length)],
+    size: 12 + Math.random() * 16,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: (Math.random() - 0.5) * 0.5,
+    alpha: 0.3 + Math.random() * 0.4,
   }));
 
   function drawDots() {
@@ -467,15 +469,16 @@ document.addEventListener('DOMContentLoaded', () => {
     dots.forEach(d => {
       d.x += d.vx;
       d.y += d.vy;
-      if (d.x < 0) d.x = bgCanvas.width;
-      if (d.x > bgCanvas.width) d.x = 0;
-      if (d.y < 0) d.y = bgCanvas.height;
-      if (d.y > bgCanvas.height) d.y = 0;
+      if (d.x < -30) d.x = bgCanvas.width + 30;
+      if (d.x > bgCanvas.width + 30) d.x = -30;
+      if (d.y < -30) d.y = bgCanvas.height + 30;
+      if (d.y > bgCanvas.height + 30) d.y = -30;
 
-      bgCtx.beginPath();
-      bgCtx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-      bgCtx.fillStyle = `rgba(255,255,255,${d.alpha})`;
-      bgCtx.fill();
+      bgCtx.save();
+      bgCtx.globalAlpha = d.alpha;
+      bgCtx.font = `${d.size}px sans-serif`;
+      bgCtx.fillText(d.emoji, d.x, d.y);
+      bgCtx.restore();
     });
     requestAnimationFrame(drawDots);
   }
@@ -541,9 +544,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => spark.remove(), 850);
   }
 
-  window.addEventListener('pointermove', (e) => {
-    createHeartTrail(e.clientX, e.clientY);
-  }, { passive: true });
+  function handleTrailEvent(e) {
+    if (e.touches && e.touches.length > 0) {
+      createHeartTrail(e.touches[0].clientX, e.touches[0].clientY);
+    } else {
+      createHeartTrail(e.clientX, e.clientY);
+    }
+  }
+  
+  window.addEventListener('pointermove', handleTrailEvent, { passive: true });
+  window.addEventListener('touchstart', handleTrailEvent, { passive: true });
+  window.addEventListener('touchmove', handleTrailEvent, { passive: true });
 
   /* ── 9. SCRATCH-OFF CANVAS FOR ALL CARDS ────────────────── */
   const scratchCanvases = document.querySelectorAll('.scratch-canvas');

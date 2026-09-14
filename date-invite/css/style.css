@@ -68,8 +68,19 @@ a { text-decoration: none; color: inherit; }
   position: relative;
   overflow: hidden;
 }
-.s-envelope { background: transparent; min-height: auto; padding-bottom: 0; z-index: 2; }
-.s-letter   { background: transparent; padding-top: 0; margin-top: -15vh; z-index: 1; }
+.s-envelope { 
+  background: transparent; 
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 2rem; 
+  z-index: 2; 
+}
+.s-letter { 
+  background: transparent; 
+  padding-top: 0; 
+  margin-top: -20vh; /* Pull letter up to overlap bottom of envelope section */
+  z-index: 1; 
+}
 .s-dark     { background: var(--clr-burgundy); }
 .s-warm     { background: var(--clr-warm); }
 .s-dramatic { background: radial-gradient(ellipse at 50% 40%, #2a0f20 0%, var(--clr-dramatic) 100%); }
@@ -216,6 +227,11 @@ a { text-decoration: none; color: inherit; }
 .envelope-wrapper.opened {
   animation: none;
 }
+.fade-out {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 1s var(--ease-out) !important;
+}
 
 /* Swipe CTA */
 .swipe-cta {
@@ -275,12 +291,12 @@ a { text-decoration: none; color: inherit; }
   box-shadow: 0 16px 48px rgba(139,30,63,0.14), 0 2px 8px rgba(0,0,0,0.04);
   border: 1px solid rgba(236,64,122,0.08);
   text-align: left;
-  transform: translateY(-200px);
+  transform: translateY(-30vh); /* Start tucked behind the envelope */
   opacity: 0;
   transition: transform 1.2s var(--ease-out), opacity 1s var(--ease-out);
 }
 .letter-card.dropped {
-  transform: translateY(0);
+  transform: translateY(0); /* Drops down out of the envelope */
   opacity: 1;
 }
 .letter-date {

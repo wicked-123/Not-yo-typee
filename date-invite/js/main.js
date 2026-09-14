@@ -53,7 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Drop the main letter card out of the envelope
     const letterCard = document.querySelector('.letter-card');
     if (letterCard) {
-      setTimeout(() => letterCard.classList.add('dropped'), 300);
+      setTimeout(() => {
+        letterCard.classList.add('dropped');
+      }, 300);
+      
+      // Fade out the envelope and top text after the letter has fully dropped
+      setTimeout(() => {
+        const envTitle = document.querySelector('.envelope-title');
+        const envSub = document.querySelector('.envelope-subtitle');
+        const envWrap = document.querySelector('.envelope-wrapper');
+        if (envTitle) envTitle.classList.add('fade-out');
+        if (envSub) envSub.classList.add('fade-out');
+        if (envWrap) envWrap.classList.add('fade-out');
+      }, 1500);
     }
   }
 
